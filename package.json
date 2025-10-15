@@ -1,0 +1,43 @@
+{
+  "name": "stoat-for-web",
+  "version": "0.0.11",
+  "version-date": "2025-08-26",
+  "description": "Stoat for Web: frontend software for Stoat",
+  "scripts": {
+    "test": "pnpm --filter test-runner test",
+    "test:coverage": "pnpm --filter test-runner coverage",
+    "test:browser:install": "pnpm --filter browser-test-runner exec playwright install",
+    "test:browser:regression": "pnpm --filter browser-test-runner exec playwright test regression",
+    "test:browser:report": "pnpm --filter browser-test-runner exec playwright show-report",
+    "lint": "eslint --ext .ts,.tsx packages/client",
+    "lint:fix": "eslint --fix --ext .ts,.tsx packages/client",
+    "dev:web": "pnpm --filter client dev",
+    "dev:storybook": "pnpm --filter client storybook",
+    "dev:desktop": "pnpm --filter desktop tauri dev",
+    "build:deps": "pnpm --filter revolt.js build && pnpm --filter solid-livekit-components build && pnpm --filter @lingui-solid/babel-plugin-lingui-macro build && pnpm --filter @lingui-solid/babel-plugin-extract-messages build && pnpm --filter client lingui:compile",
+    "build:web": "pnpm --filter client build",
+    "build:prod": "pnpm --filter client build:prod",
+    "build:desktop": "pnpm --filter desktop tauri build",
+    "start": "cd packages/client && pnpm run serve",
+    "fmt": "prettier --write 'packages/client/**/*.{ts,tsx,json}'",
+    "fmt:check": "prettier --check 'packages/client/**/*.{ts,tsx,json}'",
+    "typecheck": "cd packages/client && pnpm run typecheck"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "@pandabox/prettier-plugin": "^0.1.3",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "eslint": "^9.26.0",
+    "eslint-plugin-prettier": "^5.4.0",
+    "eslint-plugin-solid": "^0.14.5",
+    "prettier": "^3.5.3",
+    "typescript-eslint": "^8.32.0"
+  },
+  "keywords": [],
+  "engines": {
+    "node": ">=16",
+    "pnpm": ">=6"
+  },
+  "private": true,
+  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
+}
