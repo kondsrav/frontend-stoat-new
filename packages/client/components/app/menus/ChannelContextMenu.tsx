@@ -8,6 +8,8 @@ import { useState } from "@revolt/state";
 
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
 import MdDelete from "@material-design-icons/svg/outlined/delete.svg?component-solid";
+import MdFavorite from "@material-design-icons/svg/outlined/favorite.svg?component-solid";
+import MdFavoriteBorder from "@material-design-icons/svg/outlined/favorite_border.svg?component-solid";
 import MdGroupAdd from "@material-design-icons/svg/outlined/group_add.svg?component-solid";
 import MdLibraryAdd from "@material-design-icons/svg/outlined/library_add.svg?component-solid";
 import MdLogout from "@material-design-icons/svg/outlined/logout.svg?component-solid";
@@ -106,6 +108,18 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     navigator.clipboard.writeText(props.channel.id);
   }
 
+  /**
+   * Toggle favorite status of the channel
+   */
+  function toggleFavorite() {
+    state.favorites.toggleFavorite(props.channel.id);
+  }
+
+  /**
+   * Check if channel is favorited
+   */
+  const isFavorited = () => state.favorites.isFavorited(props.channel.id);
+
   return (
     <ContextMenu>
       <Show
@@ -127,6 +141,19 @@ export function ChannelContextMenu(props: { channel: Channel }) {
       </Show>
 
       <NotificationContextMenu channel={props.channel} />
+
+      <ContextMenuDivider />
+
+      <ContextMenuButton
+        icon={isFavorited() ? MdFavorite : MdFavoriteBorder}
+        onClick={toggleFavorite}
+      >
+        {isFavorited() ? (
+          <Trans>Remove from favorites</Trans>
+        ) : (
+          <Trans>Add to favorites</Trans>
+        )}
+      </ContextMenuButton>
 
       <ContextMenuDivider />
 

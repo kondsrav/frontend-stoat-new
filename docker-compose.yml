@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      # Backend connection URLs - adjust these to match your backend configuration
+      - VITE_API_URL=http://localhost:14702
+      - VITE_WS_URL=ws://localhost:14703
+      - VITE_MEDIA_URL=http://localhost:14704
+      - VITE_PROXY_URL=http://localhost:14705
+      # Optional: Add other environment variables
+      - VITE_HCAPTCHA_SITEKEY=${VITE_HCAPTCHA_SITEKEY:-}
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+    depends_on:
+      - backend
+    networks:
+      - stoat-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Backend service (assuming your backend is in ../backend/stoatchat)
+  # You'll need to adjust this based on your actual backend setup
+  backend:
+    build:
+      context: ../backend/stoatchat
+      dockerfile: Dockerfile
+    ports:
+      - "14702:14702"  # API
+      - "14703:14703"  # WebSocket
+      - "14704:14704"  # Media
+      - "14705:14705"  # Proxy
+    environment:
+      # Add your backend environment variables here
+      - RUST_LOG=info
+      - DATABASE_URL=${DATABASE_URL:-}
+    networks:
+      - stoat-network
+    restart: unless-stopped
+    # Uncomment if you have a health check endpoint in your backend
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:14702/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
+
+  # Optional: Add a database service if needed
+  # database:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_DB=stoat
+  #     - POSTGRES_USER=stoat
+  #     - POSTGRES_PASSWORD=password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - stoat-network
+
+networks:
+  stoat-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:

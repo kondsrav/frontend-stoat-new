@@ -1,0 +1,62 @@
+# Build stage
+
+FROM node:20-alpine AS build
+
+WORKDIR /app
+ 
+# Build-time args for Vite
+
+ARG VITE_API_URL
+
+ARG VITE_WS_URL
+
+ARG VITE_MEDIA_URL
+
+ARG VITE_PROXY_URL
+
+ENV VITE_API_URL=$VITE_API_URL VITE_WS_URL=$VITE_WS_URL VITE_MEDIA_URL=$VITE_MEDIA_URL VITE_PROXY_URL=$VITE_PROXY_URL
+ 
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy all sources (including workspace packages) so prepare scripts can run during install
+COPY . .
+
+# install pnpm and install using the lockfile (ensure dev deps are installed for prepare scripts)
+ENV NODE_ENV=development
+RUN npm install -g pnpm \
+  && pnpm install --frozen-lockfile
+
+# build the client workspace
+RUN pnpm run build:prod
+ 
+# Serve with nginx
+
+FROM nginx:alpine
+
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+COPY --from=build /app/packages/client/dist /usr/share/nginx/html
+
+
+
+
+
+
+
+
+# Ensure healthcheck tooling is available in the final image
+RUN apk add --no-cache curl
+
+RUN cat > /etc/nginx/conf.d/site.conf << 'EOF'
+server {
+  listen 80;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+  location / { try_files $uri $uri/ /index.html; }
+  location = /health { access_log off; return 200 "OK\n"; add_header Content-Type text/plain; }
+}
+EOF
+
+EXPOSE 80
+

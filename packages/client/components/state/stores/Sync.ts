@@ -7,9 +7,9 @@ import { State } from "..";
 
 import { AbstractStore } from ".";
 
-type SynchronisedStores = "ordering" | "notifications";
+type SynchronisedStores = "ordering" | "notifications" | "favorites";
 
-const STORE_KEYS: SynchronisedStores[] = ["ordering", "notifications"];
+const STORE_KEYS: SynchronisedStores[] = ["ordering", "notifications", "favorites"];
 
 export interface TypeSynchronisation {
   revision: Record<SynchronisedStores, number>;
@@ -52,6 +52,7 @@ export class Sync extends AbstractStore<"sync", TypeSynchronisation> {
       revision: {
         ordering: 0,
         notifications: 0,
+        favorites: 0,
       },
     };
   }

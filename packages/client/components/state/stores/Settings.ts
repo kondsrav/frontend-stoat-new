@@ -49,6 +49,11 @@ interface SettingsDefinition {
   "appearance:compact_mode": boolean;
 
   /**
+   * Show favorites section in sidebar
+   */
+  "appearance:show_favorites": boolean;
+
+  /**
    * Indicate new users to Stoat
    * TODO: implement
    */
@@ -85,6 +90,7 @@ const EXPECTED_TYPES: { [K in keyof SettingsDefinition]: ValueType<K> } = {
   "appearance:unicode_emoji": "string",
   "appearance:show_send_button": "boolean",
   "appearance:compact_mode": "boolean",
+  "appearance:show_favorites": "boolean",
   "advanced:copy_id": "boolean",
   "advanced:admin_panel": "boolean",
 };
@@ -126,6 +132,7 @@ export class Settings extends AbstractStore<"settings", TypeSettings> {
       "appearance:unicode_emoji": "fluent-3d",
       "appearance:show_send_button": true,
       "appearance:compact_mode": false,
+      "appearance:show_favorites": true,
       "advanced:copy_id": false,
       "advanced:admin_panel": false,
     };

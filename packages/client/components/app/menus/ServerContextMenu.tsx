@@ -12,6 +12,8 @@ import { Column, Text, Time } from "@revolt/ui";
 import MdAlternateEmail from "@material-design-icons/svg/outlined/alternate_email.svg?component-solid";
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
 import MdFace from "@material-design-icons/svg/outlined/face.svg?component-solid";
+import MdFavorite from "@material-design-icons/svg/outlined/favorite.svg?component-solid";
+import MdFavoriteBorder from "@material-design-icons/svg/outlined/favorite_border.svg?component-solid";
 import MdLogout from "@material-design-icons/svg/outlined/logout.svg?component-solid";
 import MdMarkChatRead from "@material-design-icons/svg/outlined/mark_chat_read.svg?component-solid";
 import MdNotificationsActive from "@material-design-icons/svg/outlined/notifications_active.svg?component-solid";
@@ -121,11 +123,23 @@ export function ServerContextMenu(props: { server: Server }) {
   }
 
   /**
-   * Copy server id to clipboard
+   * Copy server ID to clipboard
    */
   function copyId() {
     navigator.clipboard.writeText(props.server.id);
   }
+
+  /**
+   * Toggle favorite status of the server
+   */
+  function toggleServerFavorite() {
+    state.favorites.toggleServerFavorite(props.server.id);
+  }
+
+  /**
+   * Check if server is favorited
+   */
+  const isServerFavorited = () => state.favorites.isServerFavorited(props.server.id);
 
   /**
    * Determine whether we can invite others to any channels
@@ -271,6 +285,19 @@ export function ServerContextMenu(props: { server: Server }) {
           <Trans>None</Trans>
         </ContextMenuButton>
       </ContextMenuSubMenu>
+      <ContextMenuDivider />
+
+      <ContextMenuButton
+        icon={isServerFavorited() ? MdFavorite : MdFavoriteBorder}
+        onClick={toggleServerFavorite}
+      >
+        {isServerFavorited() ? (
+          <Trans>Remove from favorites</Trans>
+        ) : (
+          <Trans>Add to favorites</Trans>
+        )}
+      </ContextMenuButton>
+
       <ContextMenuDivider />
 
       <Show when={permissionInviteOthers()}>

@@ -221,9 +221,94 @@ export const ServerList = (props: Props) => {
           </a>
         </Show>
         <LineDivider />
+        
+        <Show when={state.favorites.getFavoriteServers().length > 0}>
+          <For each={props.orderedServers.filter(server => state.favorites.isServerFavorited(server.id))}>
+            {(server) => (
+              <Tooltip
+                placement="right"
+                content={() => (
+                  <Column>
+                    <Text class="label" size="large">
+                      {server.name}
+                    </Text>
+                    <Text class="label" size="small">
+                      <Trans>Favorite</Trans>
+                    </Text>
+                    <Show when={state.notifications.isMuted(server)}>
+                      <Text class="label" size="small">
+                        <Show
+                          when={
+                            state.notifications.getServerMute(server)!.until
+                          }
+                          fallback={<Trans>Muted</Trans>}
+                        >
+                          <Trans>
+                            Muted until{" "}
+                            <Time
+                              format="datetime"
+                              value={
+                                state.notifications.getServerMute(server)!
+                                  .until
+                              }
+                            />
+                          </Trans>
+                        </Show>
+                      </Text>
+                    </Show>
+                  </Column>
+                )}
+                aria={server.name}
+              >
+                <div
+                  class={entryContainer({
+                    indicator:
+                      props.selectedServer() === server.id
+                        ? "selected"
+                        : server.unread
+                          ? "alert"
+                          : undefined,
+                  })}
+                  use:floating={props.menuGenerator(server)}
+                >
+                  <a href={state.layout.getLastActiveServerPath(server.id)}>
+                    <Avatar
+                      size={42}
+                      src={server.iconURL}
+                      holepunch={
+                        server.mentions.length ? "top-right" : "none"
+                      }
+                      overlay={
+                        <>
+                          <Show
+                            when={
+                              server.mentions
+                                .length /* as opposed to item.unread */
+                            }
+                          >
+                            <Unreads.Graphic
+                              count={server.mentions.length}
+                              unread
+                            />
+                          </Show>
+                        </>
+                      }
+                      fallback={server.name}
+                      interactive
+                    />
+                  </a>
+                </div>
+              </Tooltip>
+            )}
+          </For>
+          <Show when={state.favorites.getFavoriteServers().length > 0 && props.orderedServers.filter(server => !state.favorites.isServerFavorited(server.id)).length > 0}>
+            <LineDivider />
+          </Show>
+        </Show>
+        
         <Draggable
           type="servers"
-          items={props.orderedServers}
+          items={props.orderedServers.filter(server => !state.favorites.isServerFavorited(server.id))}
           onChange={props.setServerOrder}
         >
           {(entry) => (

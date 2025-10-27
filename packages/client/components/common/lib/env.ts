@@ -1,35 +1,30 @@
-
+ 
 // Local development URLs - Force localhost for development
 const LOCAL_API_URL = "http://localhost:14702";
 const LOCAL_WS_URL = "ws://localhost:14703";
 const LOCAL_MEDIA_URL = "http://localhost:14704";
 const LOCAL_PROXY_URL = "http://localhost:14705";
-
+ 
 // Self-hosted production URLs (used when building for production)
-const PRODUCTION_API_URL = "https://revolt-test.zasperhub.com/api";
-const PRODUCTION_WS_URL = "wss://revolt-test.zasperhub.com/ws";
-const PRODUCTION_MEDIA_URL = "https://revolt-test.zasperhub.com/autumn";
-const PRODUCTION_PROXY_URL = "https://revolt-test.zasperhub.com/january";
-
+const PRODUCTION_API_URL = "https://stoat-dev.zasperhub.com/api";
+const PRODUCTION_WS_URL = "wss://stoat-dev.zasperhub.com/ws";
+const PRODUCTION_MEDIA_URL = "https://stoat-dev.zasperhub.com/autumn";
+const PRODUCTION_PROXY_URL = "https://stoat-dev.zasperhub.com/january";
+ 
 // Force localhost for development, use production URLs only for builds
 const isDevelopment = import.meta.env.DEV;
-
-const DEFAULT_API_URL = isDevelopment 
-  ? LOCAL_API_URL 
-  : (import.meta.env.VITE_API_URL as string) ?? PRODUCTION_API_URL;
-
-const DEFAULT_WS_URL = isDevelopment 
-  ? LOCAL_WS_URL 
-  : (import.meta.env.VITE_WS_URL as string) ?? PRODUCTION_WS_URL;
-
-const DEFAULT_MEDIA_URL = isDevelopment 
-  ? LOCAL_MEDIA_URL 
-  : (import.meta.env.VITE_MEDIA_URL as string) ?? PRODUCTION_MEDIA_URL;
-
-const DEFAULT_PROXY_URL = isDevelopment 
-  ? LOCAL_PROXY_URL 
-  : (import.meta.env.VITE_PROXY_URL as string) ?? PRODUCTION_PROXY_URL;
-
+ 
+// Prefer explicit VITE_* environment variables when provided (even in dev).
+// This makes it possible to run the app inside Docker and point it at a
+// remote backend (for example your EC2 host) without forcing localhost.
+const DEFAULT_API_URL = (import.meta.env.VITE_API_URL as string) ?? (isDevelopment ? LOCAL_API_URL : PRODUCTION_API_URL);
+ 
+const DEFAULT_WS_URL = (import.meta.env.VITE_WS_URL as string) ?? (isDevelopment ? LOCAL_WS_URL : PRODUCTION_WS_URL);
+ 
+const DEFAULT_MEDIA_URL = (import.meta.env.VITE_MEDIA_URL as string) ?? (isDevelopment ? LOCAL_MEDIA_URL : PRODUCTION_MEDIA_URL);
+ 
+const DEFAULT_PROXY_URL = (import.meta.env.VITE_PROXY_URL as string) ?? (isDevelopment ? LOCAL_PROXY_URL : PRODUCTION_PROXY_URL);
+ 
 // Debug: Log the URLs being used
 console.log("🚀 API Configuration:", {
   isDevelopment,
@@ -38,7 +33,7 @@ console.log("🚀 API Configuration:", {
   DEFAULT_MEDIA_URL,
   DEFAULT_PROXY_URL
 });
-
+ 
 export default {
   /**
    * Whether to emit additional debug information

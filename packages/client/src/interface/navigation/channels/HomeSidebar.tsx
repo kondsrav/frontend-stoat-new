@@ -11,6 +11,7 @@ import { useClient } from "@revolt/client";
 import { TextWithEmoji } from "@revolt/markdown";
 import { useModals } from "@revolt/modal";
 import { useLocation, useNavigate } from "@revolt/routing";
+import { useState } from "@revolt/state";
 import { iconSize } from "@revolt/ui";
 import {
   Avatar,
@@ -56,6 +57,7 @@ export const HomeSidebar = (props: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { openModal } = useModals();
+  const state = useState();
 
   const savedNotesChannelId = createMemo(() => props.openSavedNotes());
 
@@ -64,6 +66,22 @@ export const HomeSidebar = (props: Props) => {
   const pendingRequests = createMemo(() => {
     return client().users.filter((user) => user.relationship === "Incoming")
       .length;
+  });
+
+  // Get favorited channels that exist in the conversations list
+  const favoritedChannels = createMemo(() => {
+    const favoriteIds = state.favorites.getFavoriteChannels();
+    return props.conversations().filter(channel => 
+      favoriteIds.includes(channel.id)
+    );
+  });
+
+  // Get non-favorited channels for Direct Messages section
+  const nonFavoritedChannels = createMemo(() => {
+    const favoriteIds = state.favorites.getFavoriteChannels();
+    return props.conversations().filter(channel => 
+      !favoriteIds.includes(channel.id)
+    );
   });
 
   return (
@@ -141,6 +159,39 @@ export const HomeSidebar = (props: Props) => {
             </Match>
           </Switch>
 
+          <Show when={state.settings.getValue("appearance:show_favorites") && favoritedChannels().length > 0}>
+            <Category>
+              <Trans>Favorites</Trans>
+            </Category>
+
+            <Deferred>
+              <VirtualContainer
+                items={favoritedChannels()}
+                scrollTarget={scrollTargetElement}
+                itemSize={{ height: 48 }}
+              >
+                {(item) => (
+                  <div
+                    style={{
+                      ...item.style,
+                      width: "100%",
+                      "padding-block": "3px",
+                    }}
+                  >
+                    <Entry
+                      // @ts-expect-error missing type on Entry
+                      role="listitem"
+                      tabIndex={item.tabIndex}
+                      style={item.style}
+                      channel={item.item}
+                      active={item.item.id === props.channelId}
+                    />
+                  </div>
+                )}
+              </VirtualContainer>
+            </Deferred>
+          </Show>
+
           <Category>
             Direct Messages
             <a
@@ -166,7 +217,7 @@ export const HomeSidebar = (props: Props) => {
 
           <Deferred>
             <VirtualContainer
-              items={props.conversations()}
+              items={nonFavoritedChannels()}
               scrollTarget={scrollTargetElement}
               itemSize={{ height: 48 }}
             >
@@ -343,15 +394,9 @@ function Entry(
           </a>
         }
         use:floating={{
-          contextMenu: () =>
-            local.channel.type === "DirectMessage" ? (
-              <UserContextMenu
-                user={local.channel.recipient!}
-                channel={local.channel}
-              />
-            ) : (
-              <ChannelContextMenu channel={local.channel} />
-            ),
+          contextMenu: () => (
+            <ChannelContextMenu channel={local.channel} />
+          ),
         }}
       >
         <NameStatusStack>

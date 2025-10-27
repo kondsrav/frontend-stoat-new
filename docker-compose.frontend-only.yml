@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      # Point to your locally running backend
+      - VITE_API_URL=http://host.docker.internal:14702
+      - VITE_WS_URL=ws://host.docker.internal:14703
+      - VITE_MEDIA_URL=http://host.docker.internal:14704
+      - VITE_PROXY_URL=http://host.docker.internal:14705
+      # Optional environment variables
+      - VITE_HCAPTCHA_SITEKEY=${VITE_HCAPTCHA_SITEKEY:-}
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    driver: bridge
