@@ -167,7 +167,7 @@ export function MessageBox(props: Props) {
 
   return (
     <Parent>
-      <Base>
+  <Base>
         <Switch fallback={props.actionsStart}>
           <Match when={!props.sendingAllowed}>
             <InlineIcon size="wide">
@@ -205,9 +205,12 @@ export function MessageBox(props: Props) {
           </Match>
         </Switch>
       </Base>
-      <Show when={props.sendingAllowed}>{props.actionsAppend}</Show>
+      <Show when={props.sendingAllowed}>
+        <div class={css({ alignSelf: "flex-end" })}>{props.actionsAppend}</div>
+      </Show>
     </Parent>
   );
 }
 
 MessageBox.InlineIcon = InlineIcon;
+

@@ -219,7 +219,11 @@ const FormRadio = (
         {...remote}
         value={local.control.value}
         onChange={(event) => {
-          local.control.setValue(event.currentTarget.value);
+          // Radio2's event.currentTarget.value may be undefined per its
+          // relaxed typing; guard against that so we never pass undefined
+          // to the form control (which expects a string).
+          const value = event.currentTarget.value ?? "";
+          local.control.setValue(value);
           local.control.markDirty(true);
         }}
         required={local.control.isRequired}
@@ -322,6 +326,7 @@ const FormResetButton = (props: {
         resetGeneric(props.group, true);
         props.onReset();
       }}
+      // enable reset when the group has unsaved changes
       isDisabled={!props.group.isDirty}
     >
       {props.children ?? <Trans>Reset</Trans>}
@@ -337,13 +342,15 @@ const FormSubmitButton = (props: {
   children: JSX.Element;
   requireDirty?: boolean;
 }) => {
+  // Submit should be enabled when the group can be submitted AND,
+  // if requireDirty is set, the group must be dirty. The previous
+  // logic inverted the requireDirty check which kept the button
+  // disabled even when changes were present.
+  const disabled =
+    !canSubmit(props.group) || (props.requireDirty === true && !props.group.isDirty);
+
   return (
-    <Button
-      type="submit"
-      isDisabled={
-        !canSubmit(props.group) || !props.requireDirty || !props.group.isDirty
-      }
-    >
+    <Button type="submit" isDisabled={disabled}>
       {props.children}
     </Button>
   );
@@ -441,3 +448,4 @@ export const Form2 = {
   canSubmit,
   submitHandler,
 };
+
