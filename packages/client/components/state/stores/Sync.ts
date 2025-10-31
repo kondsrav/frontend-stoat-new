@@ -11,6 +11,9 @@ type SynchronisedStores = "ordering" | "notifications" | "favorites";
 
 const STORE_KEYS: SynchronisedStores[] = ["ordering", "notifications", "favorites"];
 
+// Find the stores array and add "favorites":
+const stores = ["settings", "draft", "ordering", "favorites"] as const;
+
 export interface TypeSynchronisation {
   revision: Record<SynchronisedStores, number>;
 }
@@ -196,3 +199,4 @@ export class Sync extends AbstractStore<"sync", TypeSynchronisation> {
     return this.#syncQueue.values().next().done === false;
   }
 }
+

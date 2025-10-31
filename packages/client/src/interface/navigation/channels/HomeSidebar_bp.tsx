@@ -1,4 +1,5 @@
 import { Match, Show, Switch, createMemo, splitProps } from "solid-js";
+
 import { Plural, Trans, useLingui } from "@lingui-solid/solid/macro";
 import { VirtualContainer } from "@minht11/solid-virtual-container";
 import { Channel } from "revolt.js";
@@ -26,7 +27,7 @@ import MdPlus from "@material-design-icons/svg/outlined/add.svg?component-solid"
 import MdClose from "@material-design-icons/svg/outlined/close.svg?component-solid";
 
 import { SidebarBase } from "./common";
-import { Symbol } from "@revolt/ui/components/utils/Symbol";
+import { Symbol } from "@revolt/ui/components/utils/Symbol"
 
 interface Props {
   /**
@@ -42,7 +43,9 @@ interface Props {
   /**
    * Open the saved notes channel
    */
-  openSavedNotes: (navigate?: ReturnType<typeof useNavigate>) => string | undefined;
+  openSavedNotes: (
+    navigate?: ReturnType<typeof useNavigate>,
+  ) => string | undefined;
 }
 
 /**
@@ -57,20 +60,28 @@ export const HomeSidebar = (props: Props) => {
   const state = useState();
 
   const savedNotesChannelId = createMemo(() => props.openSavedNotes());
+
   let scrollTargetElement!: HTMLDivElement;
 
   const pendingRequests = createMemo(() => {
-    return client().users.filter((user) => user.relationship === "Incoming").length;
+    return client().users.filter((user) => user.relationship === "Incoming")
+      .length;
   });
 
+  // Get favorited channels that exist in the conversations list
   const favoritedChannels = createMemo(() => {
     const favoriteIds = state.favorites.getFavoriteChannels();
-    return props.conversations().filter((channel) => favoriteIds.includes(channel.id));
+    return props.conversations().filter(channel => 
+      favoriteIds.includes(channel.id)
+    );
   });
 
+  // Get non-favorited channels for Direct Messages section
   const nonFavoritedChannels = createMemo(() => {
     const favoriteIds = state.favorites.getFavoriteChannels();
-    return props.conversations().filter((channel) => !favoriteIds.includes(channel.id));
+    return props.conversations().filter(channel => 
+      !favoriteIds.includes(channel.id)
+    );
   });
 
   return (
@@ -84,7 +95,7 @@ export const HomeSidebar = (props: Props) => {
           <a href="/app">
             <MenuButton
               size="normal"
-              icon={<Symbol css={{ alignSelf: "center", paddingBottom: "2px" }}>home</Symbol>}
+              icon={<Symbol css={{alignSelf: "center", paddingBottom: "2px"}}>home</Symbol>}
               attention={location.pathname === "/app" ? "selected" : "normal"}
             >
               <ButtonTitle>
@@ -98,8 +109,10 @@ export const HomeSidebar = (props: Props) => {
           <a href="/friends">
             <MenuButton
               size="normal"
-              icon={<Symbol css={{ alignSelf: "center", paddingBottom: "1px" }}>group</Symbol>}
-              attention={location.pathname === "/friends" ? "selected" : "normal"}
+              icon={<Symbol css={{alignSelf: "center", paddingBottom: "1px"}}>group</Symbol>}
+              attention={
+                location.pathname === "/friends" ? "selected" : "normal"
+              }
             >
               <ButtonTitle>
                 <Trans>Friends</Trans>
@@ -110,7 +123,7 @@ export const HomeSidebar = (props: Props) => {
               </ButtonTitle>
             </MenuButton>
           </a>
-
+            
           <div style={{ height: "5px" }} />
 
           <Switch
@@ -118,7 +131,7 @@ export const HomeSidebar = (props: Props) => {
               <MenuButton
                 size="normal"
                 attention={"normal"}
-                icon={<Symbol css={{ alignSelf: "center", paddingBottom: "2px" }}>note_stack</Symbol>}
+                icon={<Symbol css={{alignSelf: "center", paddingBottom: "2px"}}>note_stack</Symbol>}
                 onClick={() => props.openSavedNotes(navigate)}
               >
                 <ButtonTitle>
@@ -131,7 +144,7 @@ export const HomeSidebar = (props: Props) => {
               <a href={`/channel/${savedNotesChannelId()}`}>
                 <MenuButton
                   size="normal"
-                  icon={<Symbol css={{ alignSelf: "center", paddingBottom: "2px" }}>note_stack</Symbol>}
+                  icon={<Symbol css={{alignSelf: "center", paddingBottom: "2px"}}>note_stack</Symbol>}
                   attention={
                     props.channelId && savedNotesChannelId() === props.channelId
                       ? "selected"
@@ -158,7 +171,13 @@ export const HomeSidebar = (props: Props) => {
                 itemSize={{ height: 48 }}
               >
                 {(item) => (
-                  <div style={{ ...item.style, width: "100%", "padding-block": "3px" }}>
+                  <div
+                    style={{
+                      ...item.style,
+                      width: "100%",
+                      "padding-block": "3px",
+                    }}
+                  >
                     <Entry
                       // @ts-expect-error missing type on Entry
                       role="listitem"
@@ -176,7 +195,9 @@ export const HomeSidebar = (props: Props) => {
           <Category>
             Direct Messages
             <a
-              class={css({ cursor: "pointer" })}
+              class={css({
+                cursor: "pointer",
+              })}
               onClick={() =>
                 openModal({
                   type: "create_group",
@@ -190,9 +211,7 @@ export const HomeSidebar = (props: Props) => {
                 },
               }}
             >
-              <Symbol fontSize="1.4em !important" marginTop="2px">
-                add
-              </Symbol>
+              <Symbol fontSize="1.4em !important" marginTop="2px">add</Symbol>
             </a>
           </Category>
 
@@ -203,7 +222,13 @@ export const HomeSidebar = (props: Props) => {
               itemSize={{ height: 48 }}
             >
               {(item) => (
-                <div style={{ ...item.style, width: "100%", "padding-block": "3px" }}>
+                <div
+                  style={{
+                    ...item.style,
+                    width: "100%",
+                    "padding-block": "3px",
+                  }}
+                >
                   <Entry
                     // @ts-expect-error missing type on Entry
                     role="listitem"
@@ -229,6 +254,7 @@ const SidebarTitle = styled("p", {
   base: {
     paddingBlock: "calc(var(--gap-md) + 15px)",
     paddingInline: "var(--gap-md)",
+
     ...typography.raw({ class: "title" }),
   },
 });
@@ -263,6 +289,7 @@ const Category = styled("div", {
     justifyContent: "space-between",
     paddingTop: "calc(var(--gap-xl) - 5px)",
     paddingBottom: "var(--gap-md)",
+
     ...typography.raw({ class: "label", size: "small" }),
     fontSize: "13px",
   },
@@ -283,11 +310,20 @@ const NameStatusStack = styled("div", {
 /**
  * Single conversation entry
  */
-function Entry(props: { channel: Channel; active: boolean }) {
+function Entry(
+  props: { channel: Channel; active: boolean } /*& Omit<
+    ComponentProps<typeof Link>,
+    "href"
+  >*/,
+) {
   const [local, remote] = splitProps(props, ["channel", "active"]);
+
   const { t } = useLingui();
   const { openModal } = useModals();
 
+  /**
+   * Determine user status if present
+   */
   const status = () =>
     local.channel.recipient?.statusMessage((s) =>
       s === "Online"
@@ -305,7 +341,11 @@ function Entry(props: { channel: Channel; active: boolean }) {
     <a {...remote} href={`/channel/${local.channel.id}`}>
       <MenuButton
         size="normal"
-        alert={!local.active && local.channel.unread && (local.channel.mentions?.size || true)}
+        alert={
+          !local.active &&
+          local.channel.unread &&
+          (local.channel.mentions?.size || true)
+        }
         attention={
           local.active
             ? "selected"
@@ -329,14 +369,12 @@ function Entry(props: { channel: Channel; active: boolean }) {
             <Match when={local.channel.type === "DirectMessage"}>
               <Avatar
                 size={32}
-                src={local.channel?.recipient?.animatedAvatarURL}
+                src={local.channel.iconURL}
                 holepunch="bottom-right"
-                fallback={
-                  local.channel?.recipient?.displayName ??
-                  local.channel?.recipient?.username
-                }
                 overlay={
-                  <UserStatus.Graphic status={local.channel?.recipient?.presence} />
+                  <UserStatus.Graphic
+                    status={local.channel?.recipient?.presence}
+                  />
                 }
               />
             </Match>
@@ -356,7 +394,9 @@ function Entry(props: { channel: Channel; active: boolean }) {
           </a>
         }
         use:floating={{
-          contextMenu: () => <ChannelContextMenu channel={local.channel} />,
+          contextMenu: () => (
+            <ChannelContextMenu channel={local.channel} />
+          ),
         }}
       >
         <NameStatusStack>
@@ -366,15 +406,17 @@ function Entry(props: { channel: Channel; active: boolean }) {
                 <TextWithEmoji content={local.channel.name!} />
               </OverflowingText>
               <span class={typography({ class: "_status" })}>
-                {local.channel.recipientIds.size}{" "}
-                {local.channel.recipientIds.size > 1 ? "Members" : "Member"}
+                {/* <Plural
+                  value={local.channel.recipientIds.size}
+                  one="# Member"
+                  other="# Members"
+                /> */}
+                {local.channel.recipientIds.size} {local.channel.recipientIds.size > 1 ? `Members` : 'Member'}
               </span>
             </Match>
             <Match when={local.channel.type === "DirectMessage"}>
               <OverflowingText>
-                {local.channel?.recipient?.displayName ??
-                  local.channel?.recipient?.username ??
-                  "Unknown User"}
+	        {local.channel?.recipient?.displayName ?? local.channel?.recipient?.username ?? "Unknown User"}
               </OverflowingText>
               <Show when={status()}>
                 <Tooltip
@@ -397,6 +439,7 @@ function Entry(props: { channel: Channel; active: boolean }) {
 
 /**
  * Inner scrollable list
+ * We fix the width in order to prevent scrollbar from moving stuff around
  */
 const List = styled("div", {
   base: {
@@ -404,4 +447,3 @@ const List = styled("div", {
     width: "var(--layout-width-channel-sidebar)",
   },
 });
-

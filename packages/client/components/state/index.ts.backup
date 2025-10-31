@@ -1,0 +1,3 @@
+
+// Add Favorites import and include in State
+import { Favorites } from "./stores/Favorites";

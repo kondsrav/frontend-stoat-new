@@ -1,5 +1,4 @@
 import { Match, Show, Switch } from "solid-js";
-
 import { Trans } from "@lingui-solid/solid/macro";
 import { Channel } from "revolt.js";
 
@@ -32,16 +31,10 @@ export function ChannelContextMenu(props: { channel: Channel }) {
   const state = useState();
   const { openModal } = useModals();
 
-  /**
-   * Mark channel as read
-   */
   function markAsRead() {
     props.channel.ack();
   }
 
-  /**
-   * Create a new invite
-   */
   function createInvite() {
     openModal({
       type: "create_invite",
@@ -49,9 +42,6 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     });
   }
 
-  /**
-   * Create a new channel
-   */
   function createChannel() {
     openModal({
       type: "create_channel",
@@ -59,9 +49,6 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     });
   }
 
-  /**
-   * Edit channel
-   */
   function editChannel() {
     openModal({
       type: "settings",
@@ -70,9 +57,6 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     });
   }
 
-  /**
-   * Delete channel
-   */
   function deleteChannel() {
     openModal({
       type: "delete_channel",
@@ -80,9 +64,6 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     });
   }
 
-  /**
-   * Open channel in Stoat Admin Panel
-   */
   function openAdminPanel() {
     window.open(
       `https://legacy-admin.stoatinternal.com/panel/inspect/channel/${props.channel.id}`,
@@ -90,9 +71,6 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     );
   }
 
-  /**
-   * Copy channel link to clipboard
-   */
   function copyLink() {
     navigator.clipboard.writeText(
       `${location.origin}${
@@ -101,23 +79,14 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     );
   }
 
-  /**
-   * Copy channel id to clipboard
-   */
   function copyId() {
     navigator.clipboard.writeText(props.channel.id);
   }
 
-  /**
-   * Toggle favorite status of the channel
-   */
   function toggleFavorite() {
     state.favorites.toggleFavorite(props.channel.id);
   }
 
-  /**
-   * Check if channel is favorited
-   */
   const isFavorited = () => state.favorites.isFavorited(props.channel.id);
 
   return (
@@ -204,3 +173,4 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     </ContextMenu>
   );
 }
+

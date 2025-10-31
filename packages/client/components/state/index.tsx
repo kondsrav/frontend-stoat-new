@@ -147,54 +147,59 @@ export class State {
   set: SetStoreFunction<Store> = (...args: unknown[]) => {
     // write to store and storage
     (this.write as (...args: unknown[]) => void)(...args);
-
-    // run side-effects
-    if (import.meta.env.DEV) {
-      console.debug("[store] updated data", args[0]);
-    }
   };
 
   /**
-   * Get a store's value by its key
-   * @param key Store's key
-   * @returns Store's value
+   * Get store data
    */
   get<T extends keyof Store>(key: T): Store[T] {
     return this.store[key];
   }
 
   /**
-   * Hydrate the state from disk and run side-effects
+   * Hydrate stores from persistent storage
    */
   async hydrate() {
-    // load all data first
-    for (const store of this.iterStores()) {
-      const data = await localforage.getItem(store.getKey());
-
-      if (data) {
-        // validate the incoming data
-        const cleanData = store.clean(data);
-
-        if (!equal(data, cleanData)) {
-          // write back to disk if it has changed
-          this.write(store.getKey(), cleanData);
-        } else {
-          this.setStore(store.getKey(), data);
+    try {
+      for (const store of this.iterStores()) {
+        const key = store.getKey();
+        
+        try {
+          const data = await localforage.getItem(key);
+          if (data) {
+            // clean and validate data
+            const cleaned = store.clean(data);
+            
+            // check if data is different before setting
+            if (!equal(this.store[key], cleaned)) {
+              this.setStore(key, cleaned as never);
+            }
+          }
+        } catch (err) {
+          console.error(`Failed to hydrate store ${key}:`, err);
         }
       }
-    }
 
-    // then run side-effects
+      // run post-hydrate logic for all stores
+      for (const store of this.iterStores()) {
+        store.hydrate();
+      }
+    } catch (err) {
+      console.error("Failed to hydrate state:", err);
+    }
+  }
+
+  /**
+   * Reset all stores to defaults
+   */
+  reset() {
     for (const store of this.iterStores()) {
-      store.hydrate();
+      this.setStore(store.getKey(), store.default() as never);
     }
   }
 }
 
-/**
- * State context
- */
-const stateContext = createContext<State>(null! as State);
+const stateContext = createContext<State>();
 
 /**
  * Mount state context
