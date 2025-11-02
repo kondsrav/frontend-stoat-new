@@ -1,19 +1,31 @@
-# Production Docker Compose for Stoat Frontend + Backend
-version: '3.8'
+# Production Docker Compose for Stoat Frontend
+# Connects to stoat-dev.zasperhub.com backend
+
 services:
+  # Frontend service
   frontend:
     image: kondsrav/stoat-frontend-prod:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        # Build-time environment variables for production
+        VITE_API_URL: "https://stoat-dev.zasperhub.com/api"
+        VITE_WS_URL: "wss://stoat-dev.zasperhub.com/ws"  
+        VITE_MEDIA_URL: "https://stoat-dev.zasperhub.com/autumn"
+        VITE_PROXY_URL: "https://stoat-dev.zasperhub.com/january"
     ports:
       - "3000:80"
     environment:
+      # Runtime environment variables
       - VITE_API_URL=https://stoat-dev.zasperhub.com/api
       - VITE_WS_URL=wss://stoat-dev.zasperhub.com/ws
       - VITE_MEDIA_URL=https://stoat-dev.zasperhub.com/autumn
       - VITE_PROXY_URL=https://stoat-dev.zasperhub.com/january
+      # Optional: Add other environment variables
       - VITE_HCAPTCHA_SITEKEY=${VITE_HCAPTCHA_SITEKEY:-}
       - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
     restart: unless-stopped
-
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
@@ -21,20 +33,6 @@ services:
       retries: 3
       start_period: 40s
 
-  # If you want to include backend in the same compose (optional)
-  # backend:
-  #   image: your-backend-image:latest
-  #   ports:
-  #     - "14702:14702"  # API
-  #     - "14703:14703"  # WebSocket
-  #     - "14704:14704"  # Media
-  #     - "14705:14705"  # Proxy
-  #   environment:
-  #     - RUST_LOG=info
-  #   networks:
-  #     - stoat-network
-  #   restart: unless-stopped
-
 networks:
-  stoat-network:
+  default:
     driver: bridge
