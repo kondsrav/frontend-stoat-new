@@ -24,8 +24,11 @@ interface Props {
    */
   getFile(fileId: string): {
     file: File;
-    dataUri: string | undefined;
-  };
+    dataUri?: string | undefined;
+    dimensions?: [number, number] | undefined;
+    autumnId?: string | undefined;
+    uploadProgress: [() => number, (value: number) => void];
+  } | null;
 
   /**
    * Invoke file picker to add file
@@ -40,10 +43,10 @@ interface Props {
 }
 
 /**
- * Determine file size
- * @param size Bytes
- * @returns Human-readable size
- */
+* Determine file size
+* @param size Bytes
+* @returns Human-readable size
+*/
 export function determineFileSize(size: number) {
   if (size > 1e6) {
     return `${(size / 1e6).toFixed(2)} MB`;
@@ -55,8 +58,8 @@ export function determineFileSize(size: number) {
 }
 
 /**
- * File carousel
- */
+* File carousel
+*/
 export function FileCarousel(props: Props) {
   return (
     <Show when={props.files.length}>
@@ -67,7 +70,7 @@ export function FileCarousel(props: Props) {
               /**
                * Get the actual file
                */
-              const file = () => props.getFile(id);
+              const fileData = () => props.getFile(id);
 
               /**
                * Handler for removing the file
@@ -75,43 +78,47 @@ export function FileCarousel(props: Props) {
               const onClick = () => props.removeFile(id);
 
               return (
-                <>
-                  <Show when={index() === CONFIGURATION.MAX_ATTACHMENTS}>
-                    <Divider />
-                  </Show>
+                <Show when={fileData()}>
+                  {(file) => (
+                    <>
+                      <Show when={index() === CONFIGURATION.MAX_ATTACHMENTS}>
+                        <Divider />
+                      </Show>
 
-                  <Entry ignored={index() >= CONFIGURATION.MAX_ATTACHMENTS}>
-                    <PreviewBox
-                      onClick={onClick}
-                      image={ALLOWED_IMAGE_TYPES.includes(file().file.type)}
-                    >
-                      <Switch
-                        fallback={
-                          <EmptyEntry>
-                            <MdFile {...iconSize(36)} />
-                          </EmptyEntry>
-                        }
-                      >
-                        <Match
-                          when={ALLOWED_IMAGE_TYPES.includes(file().file.type)}
+                      <Entry ignored={index() >= CONFIGURATION.MAX_ATTACHMENTS}>
+                        <PreviewBox
+                          onClick={onClick}
+                          image={file().file && ALLOWED_IMAGE_TYPES.includes(file().file.type)}
                         >
-                          <Image
-                            src={file().dataUri}
-                            alt={file().file.name}
-                            loading="eager"
-                          />
-                        </Match>
-                      </Switch>
-                      <Overlay>
-                        <MdCancel {...iconSize(36)} />
-                      </Overlay>
-                    </PreviewBox>
-                    <FileName>
-                      <OverflowingText>{file().file.name}</OverflowingText>
-                    </FileName>
-                    <Size>{determineFileSize(file().file.size)}</Size>
-                  </Entry>
-                </>
+                          <Switch
+                            fallback={
+                              <EmptyEntry>
+                                <MdFile {...iconSize(36)} />
+                              </EmptyEntry>
+                            }
+                          >
+                            <Match
+                              when={file().file && ALLOWED_IMAGE_TYPES.includes(file().file.type)}
+                            >
+                              <Image
+                                src={file().dataUri || ""}
+                                alt={file().file?.name || ""}
+                                loading="eager"
+                              />
+                            </Match>
+                          </Switch>
+                          <Overlay>
+                            <MdCancel {...iconSize(36)} />
+                          </Overlay>
+                        </PreviewBox>
+                        <FileName>
+                          <OverflowingText>{file().file?.name || "Unknown"}</OverflowingText>
+                        </FileName>
+                        <Size>{file().file?.size ? determineFileSize(file().file.size) : "0 B"}</Size>
+                      </Entry>
+                    </>
+                  )}
+                </Show>
               );
             }}
           </For>
@@ -126,8 +133,8 @@ export function FileCarousel(props: Props) {
 }
 
 /**
- * Image preview container
- */
+* Image preview container
+*/
 const PreviewBox = styled("div", {
   base: {
     display: "grid",
@@ -153,8 +160,8 @@ const PreviewBox = styled("div", {
 });
 
 /**
- * Image preview
- */
+* Image preview
+*/
 const Image = styled("img", {
   base: {
     width: "100%",
@@ -165,8 +172,8 @@ const Image = styled("img", {
 });
 
 /**
- * Overlay container
- */
+* Overlay container
+*/
 const Overlay = styled("div", {
   base: {
     zIndex: 1,
@@ -190,8 +197,8 @@ const Overlay = styled("div", {
 });
 
 /**
- * Empty entry container
- */
+* Empty entry container
+*/
 const EmptyEntry = styled("div", {
   base: {
     position: "relative",
@@ -210,8 +217,8 @@ const EmptyEntry = styled("div", {
 });
 
 /**
- * Carousel entry container
- */
+* Carousel entry container
+*/
 const Entry = styled("div", {
   base: {
     display: "flex",
@@ -229,8 +236,8 @@ const Entry = styled("div", {
 });
 
 /**
- * File name information
- */
+* File name information
+*/
 const FileName = styled("span", {
   base: {
     maxWidth: "var(--preview-size)",
@@ -241,8 +248,8 @@ const FileName = styled("span", {
 });
 
 /**
- * File size information
- */
+* File size information
+*/
 const Size = styled("span", {
   base: {
     ...typography.raw({ class: "label", size: "small" }),
@@ -250,8 +257,8 @@ const Size = styled("span", {
 });
 
 /**
- * Divider between files to be uploaded and files for next upload
- */
+* Divider between files to be uploaded and files for next upload
+*/
 const Divider = styled("div", {
   base: {
     height: "130px",
@@ -263,8 +270,8 @@ const Divider = styled("div", {
 });
 
 /**
- * Inner carousel container
- */
+* Inner carousel container
+*/
 const carousel = cva({
   base: {
     display: "flex",
@@ -276,8 +283,8 @@ const carousel = cva({
 });
 
 /**
- * Outer carousel container
- */
+* Outer carousel container
+*/
 const Container = styled("div", {
   base: {
     display: "flex",
@@ -295,3 +302,4 @@ const Container = styled("div", {
     "--preview-size": "100px",
   },
 });
+ 

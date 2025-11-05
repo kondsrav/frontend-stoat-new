@@ -336,51 +336,153 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
 
         body.set("file", file);
 
-        // We have to use XMLHttpRequest because modern fetch duplex streams require QUIC or HTTP/2
-        const xhr = new XMLHttpRequest();
-
-        const [success, response] = await new Promise<
-          [boolean, { id: string }]
-        >((resolve) => {
-          xhr.upload.addEventListener("progress", (event) => {
-            if (event.lengthComputable) {
-              uploadProgress[1](event.loaded / event.total);
-            }
-          });
-
-          xhr.addEventListener("loadend", () => {
-            uploadProgress[1](1);
-            resolve([xhr.readyState === 4 && xhr.status === 200, xhr.response]);
-          });
-
-          xhr.open(
-            "POST",
-            `${client.configuration!.features.autumn.url}/attachments`,
-            true,
-          );
-
-          const [authHeader, authHeaderValue] = client.authenticationHeader;
-          xhr.setRequestHeader(authHeader, authHeaderValue);
-          xhr.responseType = "json";
-
-          xhr.send(body);
+        // Use the same upload method as revolt.js client
+        const [authKey, authValue] = client.authenticationHeader;
+        const autumnUrl = client.configuration!.features.autumn.url;
+        const uploadUrl = `${autumnUrl}/attachments`;
+        
+        console.log('Upload configuration:', {
+          autumnUrl: autumnUrl,
+          uploadUrl: uploadUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          authKey: authKey,
+          authValue: authValue ? '[PRESENT]' : '[MISSING]'
         });
 
-        if (!success) throw "Upload Error";
+        try {
+          const response = await fetch(uploadUrl, {
+            method: "POST",
+            body,
+            headers: {
+              [authKey]: authValue,
+            },
+          });
 
-        attachments.push(response.id);
-        this.fileCache[fileId].autumnId = response.id;
+          console.log('Upload response:', {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Array.from(response.headers.entries()),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Upload failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              body: errorText
+            });
+            
+            let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            if (response.status === 500) {
+              errorMessage = "Server error - please try again";
+            } else if (response.status === 401) {
+              errorMessage = "Authentication failed";
+            } else if (response.status === 403) {
+              errorMessage = "Permission denied";
+            } else if (response.status === 413) {
+              errorMessage = "File too large";
+            } else if (response.status === 415) {
+              errorMessage = "File type not supported";
+            }
+            
+            throw new Error(errorMessage);
+          }
+
+          const uploadResult: { id: string } = await response.json();
+          console.log('Upload successful:', uploadResult);
+
+          if (!uploadResult || !uploadResult.id) {
+            throw new Error('Server response missing file ID');
+          }
+
+          console.log(`Upload successful for file ${file.name}, ID:`, uploadResult.id);
+          attachments.push(uploadResult.id);
+          this.fileCache[fileId].autumnId = uploadResult.id;
+          uploadProgress[1](1);
+        } catch (error) {
+          console.error(`Upload failed for file ${file.name}:`, error);
+          uploadProgress[1](0); // Reset progress on error
+          throw error;
+        }
       }
     }
 
     // TODO: fix bug with backend
     if (!attachments.length) {
       delete data.attachments;
+    } else {
+      data.attachments = attachments;
     }
+
+    console.log('Sending message with data:', {
+      content: data.content,
+      attachments: data.attachments,
+      attachmentCount: attachments.length,
+      replies: data.replies
+    });
+
+    // Update outbox with attachments before sending
+    this.set(
+      "outbox",
+      channel.id,
+      this.getPendingMessages(channel.id).map((entry) =>
+        entry.idempotencyKey === idempotencyKey
+          ? {
+              ...entry,
+              attachments: data.attachments,
+              status: "sending",
+            }
+          : entry,
+      ),
+    );
 
     // Send the message and clear the draft
     try {
-      await channel.sendMessage(data, idempotencyKey);
+      console.log('🚀 SENDING MESSAGE - Complete Debug Info:', {
+        channelId: channel.id,
+        channelType: channel.type,
+        serverId: channel.server_id || 'DM',
+        idempotencyKey: idempotencyKey,
+        messageData: {
+          content: data.content,
+          attachments: data.attachments,
+          replies: data.replies,
+          masquerade: data.masquerade,
+          nonce: data.nonce,
+          embeds: data.embeds,
+          interactions: data.interactions
+        },
+        attachmentInfo: attachments.map((id, index) => ({
+          attachmentId: id,
+          originalFile: files ? files[index]?.file?.name : 'unknown'
+        }))
+      });
+
+      // Make sure attachments is an array of strings
+      if (data.attachments && !Array.isArray(data.attachments)) {
+        console.error('❌ CRITICAL: attachments is not an array:', typeof data.attachments, data.attachments);
+        data.attachments = [data.attachments];
+      }
+
+      // Validate each attachment ID
+      if (data.attachments) {
+        for (let i = 0; i < data.attachments.length; i++) {
+          const attachmentId = data.attachments[i];
+          if (typeof attachmentId !== 'string' || !attachmentId.trim()) {
+            console.error(`❌ CRITICAL: Invalid attachment ID at index ${i}:`, attachmentId);
+            throw new Error(`Invalid attachment ID at index ${i}: ${attachmentId}`);
+          }
+        }
+      }
+
+      console.log('✅ Pre-flight checks passed, calling channel.sendMessage...');
+      const result = await channel.sendMessage(data, idempotencyKey);
+      console.log('✅ Message sent successfully, result:', result);
+
+      // Clear the draft after successful send
+      this.clearDraft(channel.id);
 
       if (files) {
         for (const file of files) {
@@ -396,6 +498,39 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
         ),
       );
     } catch (err) {
+      console.error('❌ MESSAGE SENDING FAILED - Complete Error Info:', {
+        error: err,
+        errorMessage: err.message,
+        errorStack: err.stack,
+        errorType: err.constructor.name,
+        statusCode: err.status || err.statusCode || 'unknown',
+        responseText: err.responseText || 'no response text',
+        channelId: channel.id,
+        messageData: data,
+        idempotencyKey: idempotencyKey
+      });
+
+      // Try to get more details from the error
+      if (err.response) {
+        console.error('❌ HTTP Response Error:', {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          headers: err.response.headers,
+          data: err.response.data
+        });
+      }
+
+      // Check for specific error types
+      if (err.message && err.message.includes('401')) {
+        console.error('❌ AUTHENTICATION ERROR: User not properly authenticated');
+      } else if (err.message && err.message.includes('403')) {
+        console.error('❌ PERMISSION ERROR: User lacks permission to send messages or attachments');
+      } else if (err.message && err.message.includes('400')) {
+        console.error('❌ VALIDATION ERROR: Message data is invalid');
+      } else if (err.message && err.message.includes('500')) {
+        console.error('❌ SERVER ERROR: Backend API error');
+      }
+      
       this.set(
         "outbox",
         channel.id,
@@ -408,6 +543,9 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
             : entry,
         ),
       );
+      
+      // Don't throw the error here - just log it
+      console.error('❌ Message failed but continuing...');
     }
   }
 
@@ -657,7 +795,7 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
    * @returns Cached File
    */
   getFile(fileId: string) {
-    return this.fileCache[fileId];
+    return this.fileCache[fileId] || null;
   }
 
   /**
@@ -736,3 +874,4 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
     return this.get().editingMessageContent;
   }
 }
+

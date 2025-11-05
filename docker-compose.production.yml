@@ -1,28 +1,13 @@
-# Production Docker Compose for Stoat Frontend
-# Connects to stoat-dev.zasperhub.com backend
-
 services:
-  # Frontend service
   frontend:
-    image: kondsrav/stoat-frontend-prod:latest
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
-      args:
-        # Build-time environment variables for production
-        VITE_API_URL: "https://stoat-dev.zasperhub.com/api"
-        VITE_WS_URL: "wss://stoat-dev.zasperhub.com/ws"  
-        VITE_MEDIA_URL: "https://stoat-dev.zasperhub.com/autumn"
-        VITE_PROXY_URL: "https://stoat-dev.zasperhub.com/january"
+    image: kondsrav/stoat-frontend-prod:v11
     ports:
       - "3000:80"
     environment:
-      # Runtime environment variables
       - VITE_API_URL=https://stoat-dev.zasperhub.com/api
       - VITE_WS_URL=wss://stoat-dev.zasperhub.com/ws
       - VITE_MEDIA_URL=https://stoat-dev.zasperhub.com/autumn
       - VITE_PROXY_URL=https://stoat-dev.zasperhub.com/january
-      # Optional: Add other environment variables
       - VITE_HCAPTCHA_SITEKEY=${VITE_HCAPTCHA_SITEKEY:-}
       - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
     restart: unless-stopped
@@ -32,7 +17,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - stoat-network-stable
 
 networks:
-  default:
-    driver: bridge
+  stoat-network-stable:
+    external: true
+

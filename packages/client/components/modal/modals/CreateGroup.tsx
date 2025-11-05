@@ -47,6 +47,10 @@ export function CreateGroupModal(
   }
 
   const [filter, setFilter] = createSignal("");
+  
+  // Clear filter when modal opens to prevent garbage values
+  setFilter("");
+  console.log("🚨 CreateGroup MODAL DEBUG - Modal opened, filter cleared to:", filter());
 
   const filterLowercase = createMemo(() => filter().toLowerCase());
 
@@ -84,7 +88,7 @@ export function CreateGroupModal(
           <Form2.TextField
             name="name"
             control={group.controls.name}
-            label={t`Group Name`}
+            label="Group Name"
           />
 
           <Text class="label">
@@ -92,10 +96,18 @@ export function CreateGroupModal(
           </Text>
 
           <TextField
-            value={filter()}
+            value=""
             variant="filled"
-            placeholder={t`Search for users...`}
-            onKeyUp={(e) => setFilter(e.currentTarget.value)}
+            placeholder="Search for users..."
+            autocomplete="off"
+            onKeyUp={(e) => {
+              const value = e.currentTarget.value;
+              console.log("🚨 CreateGroup INPUT DEBUG - Raw value:", value);
+              // Sanitize input - only allow letters, numbers, spaces, and common username characters
+              const sanitized = value.replace(/[^a-zA-Z0-9\s_.-]/g, '');
+              console.log("🚨 CreateGroup INPUT DEBUG - Sanitized value:", sanitized);
+              setFilter(sanitized);
+            }}
           />
 
           <Form2.VirtualSelect
@@ -119,3 +131,4 @@ export function CreateGroupModal(
     </Dialog>
   );
 }
+

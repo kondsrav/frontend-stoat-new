@@ -80,6 +80,7 @@ export default {
    * Maximum number of emoji a server can have
    */
   MAX_EMOJI: (import.meta.env.VITE_CFG_MAX_EMOJI as number) ?? 100,
+  MAX_FILE_SIZE: (import.meta.env.VITE_CFG_MAX_FILE_SIZE as number) ?? (20 * 1024 * 1024), // 20MB default
   /**
    * Session ID to set during development.
    */
