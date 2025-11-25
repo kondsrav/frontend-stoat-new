@@ -1,13 +1,13 @@
 services:
   frontend:
-    image: kondsrav/stoat-frontend-prod:v11
+    image: kondsrav/stoat-frontend-qa:v4
     ports:
       - "3000:80"
     environment:
-      - VITE_API_URL=https://stoat-dev.zasperhub.com/api
-      - VITE_WS_URL=wss://stoat-dev.zasperhub.com/ws
-      - VITE_MEDIA_URL=https://stoat-dev.zasperhub.com/autumn
-      - VITE_PROXY_URL=https://stoat-dev.zasperhub.com/january
+      - VITE_API_URL=https://stoat-qa.zasperhub.com/api
+      - VITE_WS_URL=wss://stoat-qa.zasperhub.com/ws
+      - VITE_MEDIA_URL=https://stoat-qa.zasperhub.com/autumn
+      - VITE_PROXY_URL=https://stoat-qa.zasperhub.com/january
       - VITE_HCAPTCHA_SITEKEY=${VITE_HCAPTCHA_SITEKEY:-}
       - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
     restart: unless-stopped

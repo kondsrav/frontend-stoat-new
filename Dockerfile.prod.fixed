@@ -10,16 +10,16 @@ RUN npm install -g pnpm
 COPY . .
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Set up assets properly  
 RUN cd packages/client && npm run setup:assets
 
 # Create production environment file
-RUN echo 'VITE_API_URL=https://stoat-dev.zasperhub.com/api' > packages/client/.env.production && \
-    echo 'VITE_WS_URL=wss://stoat-dev.zasperhub.com/ws' >> packages/client/.env.production && \
-    echo 'VITE_MEDIA_URL=https://stoat-dev.zasperhub.com/autumn' >> packages/client/.env.production && \
-    echo 'VITE_PROXY_URL=https://stoat-dev.zasperhub.com/january' >> packages/client/.env.production
+RUN echo 'VITE_API_URL=http://stoat-qa.zasperhub.com/api' > packages/client/.env.production && \
+    echo 'VITE_WS_URL=ws://stoat-qa.zasperhub.com/ws' >> packages/client/.env.production && \
+    echo 'VITE_MEDIA_URL=http://stoat-qa.zasperhub.com/autumn' >> packages/client/.env.production && \
+    echo 'VITE_PROXY_URL=http://stoat-qa.zasperhub.com/january' >> packages/client/.env.production
 
 # Set environment for production build
 ENV NODE_ENV=production

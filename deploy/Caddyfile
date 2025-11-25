@@ -1,0 +1,38 @@
+stoat-qa.zasperhub.com {
+    # WebSocket: match /ws* and strip the /ws prefix before proxying to the API
+    handle_path /ws* {
+        # strip /ws and forward to API (so /ws/foo -> /foo on API)
+        rewrite * /{path_regexp(^/ws(?<rest>/?.*)$)}{http.regexp.rest.1}
+        reverse_proxy http://api:14702 {
+            # forward upgrade headers
+            header_up Host {http.request.host}
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
+        }
+    }
+
+    # API endpoints (strip /api prefix and forward to API)
+    handle_path /api/* {
+        reverse_proxy http://api:14702 {
+            header_up Host {http.request.host}
+        }
+    }
+
+    # Frontend: everything else goes to the frontend container
+    handle {
+        reverse_proxy http://frontend-stoat-new-frontend-1:80 {
+            header_up Host {http.request.host}
+        }
+    }
+
+    encode gzip
+
+    log {
+        output stdout
+        format console
+    }
+
+    # TLS autodoc (update email if you want)
+    tls you@your.email.com
+}
+
