@@ -31,6 +31,22 @@ export function TextSearchSidebar(props: {
         .then((result) => result.messages),
   }));
 
+  /**
+   * Handle click on search result - store search term for highlighting
+   */
+  const handleResultClick = (message: any, searchQuery: string) => {
+    try {
+      // Store the search term and message ID in sessionStorage
+      // This will be picked up by MessageHighlighter to highlight the search term
+      sessionStorage.setItem('messageSearchTerm', searchQuery);
+      sessionStorage.setItem('messageSearchId', message.id);
+      
+      console.log('Local search - storing search term:', searchQuery, 'for message:', message.id);
+    } catch (error) {
+      console.debug('Error storing search term:', error);
+    }
+  };
+
   return (
     <>
       <Show when={!props.query.sort}>
@@ -61,7 +77,10 @@ export function TextSearchSidebar(props: {
       <Suspense fallback={<CircularProgress />}>
         <For each={query.data}>
           {(message) => (
-            <a href={message.path}>
+            <a 
+              href={message.path}
+              onClick={() => handleResultClick(message, props.query.query || '')}
+            >
               <Message message={message} isLink />
             </a>
           )}

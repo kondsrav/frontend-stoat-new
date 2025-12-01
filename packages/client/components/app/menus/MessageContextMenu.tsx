@@ -19,6 +19,7 @@ import MdReply from "@material-design-icons/svg/outlined/reply.svg?component-sol
 import MdReport from "@material-design-icons/svg/outlined/report.svg?component-solid";
 import MdShare from "@material-design-icons/svg/outlined/share.svg?component-solid";
 import MdShield from "@material-design-icons/svg/outlined/shield.svg?component-solid";
+import MdForward from "@material-design-icons/svg/outlined/forward.svg?component-solid";
 
 import MdSentimentContent from "@material-symbols/svg-400/outlined/sentiment_content.svg?component-solid";
 
@@ -106,6 +107,16 @@ export function MessageContextMenu(props: { message: Message }) {
   }
 
   /**
+   * Forward the message
+   */
+  function forwardMessage() {
+    openModal({
+      type: "forward_message",
+      message: props.message,
+    });
+  }
+
+  /**
    * Copy message id to clipboard
    */
   function copyId() {
@@ -124,6 +135,9 @@ export function MessageContextMenu(props: { message: Message }) {
       </ContextMenuButton>
       <ContextMenuButton icon={MdContentCopy} onClick={copyText}>
         <Trans>Copy text</Trans>
+      </ContextMenuButton>
+      <ContextMenuButton icon={MdForward} onClick={forwardMessage}>
+        <Trans>Forward message</Trans>
       </ContextMenuButton>
       <ContextMenuDivider />
       <Show
@@ -225,3 +239,4 @@ export function MessageContextMenu(props: { message: Message }) {
     </ContextMenu>
   );
 }
+

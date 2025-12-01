@@ -75,6 +75,11 @@ storybook-static/
 
 # Optional eslint cache
 .eslintcache
+# Ignore local package node_modules and tooling caches that can break context upload
+**/node_modules/
+**/.pnpm-store/
+**/.ignored_convert-source-map
+
 
 # Microbundle cache
 .rpt2_cache/
@@ -120,4 +125,3 @@ docker-compose*.yml
 # Other large directories not needed for build
 lifecycle/
 .git/
-target/

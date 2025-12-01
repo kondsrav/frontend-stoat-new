@@ -28,10 +28,36 @@ export function ProfileActions(props: {
   const { openModal } = useModals();
 
   /**
-   * Open direct message channel
+   * Open direct message channel with auto-friend request handling
    */
-  function openDm() {
-    props.user.openDM().then((channel) => navigate(channel.url));
+  async function handleMessage() {
+    try {
+      // Skip friend request logic for bots
+      if (!props.user.bot) {
+        // Handle different relationship states
+        if (props.user.relationship === "None") {
+          // Send friend request (backend auto-accepts it)
+          await props.user.addFriend();
+        } else if (props.user.relationship === "Incoming") {
+          // They already sent us a request, accept it by calling PUT endpoint
+          await props.user.client.api.put(`/users/${props.user.id}/friend`);
+        }
+        // For "Outgoing" and "Friend", no action needed
+      }
+
+      // Now try to open the DM
+      const channel = await props.user.openDM();
+      navigate(channel.url);
+    } catch (error) {
+      console.error("Error handling message:", error);
+      // Fallback: try to open DM anyway
+      try {
+        const channel = await props.user.openDM();
+        navigate(channel.url);
+      } catch (dmError) {
+        console.error("Error opening DM:", dmError);
+      }
+    }
   }
 
   /**
@@ -49,24 +75,9 @@ export function ProfileActions(props: {
 
   return (
     <Actions width={props.width}>
-      <Show when={props.user.relationship === "None" && !props.user.bot}>
-        <Button onPress={() => props.user.addFriend()}>Add Friend</Button>
-      </Show>
-      <Show when={props.user.relationship === "Incoming"}>
-        <Button onPress={() => props.user.addFriend()}>
-          Accept friend request
-        </Button>
-        <IconButton onPress={() => props.user.removeFriend()}>
-          <MdCancel />
-        </IconButton>
-      </Show>
-      <Show when={props.user.relationship === "Outgoing"}>
-        <Button onPress={() => props.user.addFriend()}>
-          Cancel friend request
-        </Button>
-      </Show>
-      <Show when={props.user.relationship === "Friend" || props.user.bot}>
-        <Button onPress={openDm}>Message</Button>
+      {/* Show Message button for all users and bots except self */}
+      <Show when={!props.user.self}>
+        <Button onPress={handleMessage}>Message</Button>
       </Show>
 
       <Show

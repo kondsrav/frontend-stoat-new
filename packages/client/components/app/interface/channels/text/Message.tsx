@@ -24,6 +24,7 @@ import {
   iconSize,
 } from "@revolt/ui";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
+import { highlightMessageText, useMessageSearchHighlight } from "@revolt/ui/components/utils/MessageHighlighter";
 
 import MdLink from "@material-design-icons/svg/filled/link.svg?component-solid";
 
@@ -76,6 +77,9 @@ export function Message(props: Props) {
   const state = useState();
   const { t } = useLingui();
   const client = useClient();
+  
+  // Add search term highlighting
+  const searchTerm = useMessageSearchHighlight(props.message.id);
 
   /**
    * Determine whether this message only contains a GIF
@@ -109,8 +113,16 @@ export function Message(props: Props) {
     return props.message.unreact(emoji, false);
   };
 
+  /**
+   * Check if we should render highlighted content
+   */
+  const shouldHighlight = () => {
+    return searchTerm() && !isOnlyGIF();
+  };
+
   return (
     <MessageContainer
+      id={`message-${props.message.id}`}
       message={props.message}
       username={
         <div use:floating={floatingUserMenusFromMessage(props.message)}>
@@ -291,7 +303,15 @@ export function Message(props: Props) {
         </Match>
         <Match when={props.message.content && !isOnlyGIF()}>
           <BreakText>
-            <Markdown content={props.message.content!} />
+            <Show
+              when={shouldHighlight()}
+              fallback={<Markdown content={props.message.content!} />}
+            >
+              {/* Render highlighted content directly without Markdown wrapper */}
+              <div style="white-space: pre-wrap;">
+                {highlightMessageText(props.message.content!, searchTerm())}
+              </div>
+            </Show>
           </BreakText>
         </Match>
       </Switch>

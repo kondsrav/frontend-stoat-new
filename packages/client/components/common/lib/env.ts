@@ -8,7 +8,7 @@ const LOCAL_PROXY_URL = "http://localhost:14705";
 // Self-hosted production URLs (used when building for production)
 const PRODUCTION_API_URL = "https://stoat-dev.zasperhub.com/api";
 const PRODUCTION_WS_URL = "wss://stoat-dev.zasperhub.com/ws";
-const PRODUCTION_MEDIA_URL = "https://stoat-dev.zasperhub.com/autumn";
+const PRODUCTION_MEDIA_URL = "https://stoat-dev.zasperhub.com/api/files";
 const PRODUCTION_PROXY_URL = "https://stoat-dev.zasperhub.com/january";
  
 // Force localhost for development, use production URLs only for builds

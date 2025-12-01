@@ -158,6 +158,7 @@ export function UserProfileEditor(props: Props) {
           name="displayName"
           control={editGroup.controls.displayName}
           label={t`Display Name`}
+	  placeholder={t`Enter your display name`}
         />
 
         <Show when={!props.user.bot}>

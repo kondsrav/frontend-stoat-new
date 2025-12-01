@@ -41,9 +41,14 @@ const FormTextField = (
         {...remote}
         value={local.control.value}
         oninput={(e) => {
-          local.control.setValue(e.currentTarget.value);
+          const newValue = e.currentTarget.value;
+          local.control.setValue(newValue);
+          local.control.markDirty(true);
+          local.control.markTouched(true);
         }}
-        onchange={() => local.control.markDirty(true)}
+        onblur={() => {
+          local.control.markTouched(true);
+        }}
         required={local.control.isRequired}
         disabled={local.control.isDisabled}
       />
@@ -76,6 +81,7 @@ const FormTextEditor = (
         onChange={(value) => {
           local.control.setValue(value);
           local.control.markDirty(true);
+          local.control.markTouched(true);
         }}
         // todo: required={local.control.isRequired}
         // todo: disabled={local.control.isDisabled}
@@ -117,6 +123,7 @@ FormTextField.Select = (
         onChange={(e) => {
           local.control.setValue(e.currentTarget.value);
           local.control.markDirty(true);
+          local.control.markTouched(true);
         }}
         required={local.control.isRequired}
         disabled={local.control.isDisabled}
@@ -158,6 +165,7 @@ const FormFileInput = (
 
           local.control.setValue(files);
           local.control.markDirty(true);
+          local.control.markTouched(true);
         }}
         required={local.control.isRequired}
         disabled={local.control.isDisabled}
@@ -189,6 +197,7 @@ const FormCheckbox = (
         onChange={(event) => {
           local.control.setValue(event.currentTarget.checked);
           local.control.markDirty(true);
+          local.control.markTouched(true);
         }}
         required={local.control.isRequired}
         disabled={local.control.isDisabled}
@@ -219,12 +228,10 @@ const FormRadio = (
         {...remote}
         value={local.control.value}
         onChange={(event) => {
-          // Radio2's event.currentTarget.value may be undefined per its
-          // relaxed typing; guard against that so we never pass undefined
-          // to the form control (which expects a string).
           const value = event.currentTarget.value ?? "";
           local.control.setValue(value);
           local.control.markDirty(true);
+          local.control.markTouched(true);
         }}
         required={local.control.isRequired}
         disabled={local.control.isDisabled}
@@ -278,6 +285,7 @@ function FormVirtualSelect<K, T>(props: {
                     ? []
                     : [item.item.value],
                 );
+                props.control.markDirty(true);
               }
             }}
           >
@@ -290,14 +298,15 @@ function FormVirtualSelect<K, T>(props: {
               <Match when={props.multiple}>
                 <Checkbox
                   class={css({ width: "100%" })}
-                  onChange={(checked) =>
+                  onChange={(checked) => {
                     props.control.setValue([
                       ...props.control.value.filter(
                         (entry) => entry !== item.item.value,
                       ),
                       ...(checked ? [item.item.value] : []),
-                    ])
-                  }
+                    ]);
+                    props.control.markDirty(true);
+                  }}
                   checked={props.control.value.includes(item.item.value)}
                 >
                   {props.children(item.item.item)}
@@ -326,7 +335,6 @@ const FormResetButton = (props: {
         resetGeneric(props.group, true);
         props.onReset();
       }}
-      // enable reset when the group has unsaved changes
       isDisabled={!props.group.isDirty}
     >
       {props.children ?? <Trans>Reset</Trans>}
@@ -342,15 +350,15 @@ const FormSubmitButton = (props: {
   children: JSX.Element;
   requireDirty?: boolean;
 }) => {
-  // Submit should be enabled when the group can be submitted AND,
-  // if requireDirty is set, the group must be dirty. The previous
-  // logic inverted the requireDirty check which kept the button
-  // disabled even when changes were present.
-  const disabled =
-    !canSubmit(props.group) || (props.requireDirty === true && !props.group.isDirty);
+  const disabled = () => {
+    // Button should be enabled if:
+    // 1. Form can be submitted (valid, not disabled, not pending)
+    // 2. AND either requireDirty is false OR the form is dirty
+    return !canSubmit(props.group) || (props.requireDirty === true && !props.group.isDirty);
+  };
 
   return (
-    <Button type="submit" isDisabled={disabled}>
+    <Button type="submit" isDisabled={disabled()}>
       {props.children}
     </Button>
   );
@@ -448,4 +456,3 @@ export const Form2 = {
   canSubmit,
   submitHandler,
 };
-

@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: kondsrav/stoat-frontend-prod:v11
+    image: kondsrav/stoat-frontend-prod:stoat
     ports:
       - "3000:80"
     environment:

@@ -18,7 +18,7 @@ RUN cd packages/client && npm run setup:assets
 # Create production environment file
 RUN echo 'VITE_API_URL=https://stoat-dev.zasperhub.com/api' > packages/client/.env.production && \
     echo 'VITE_WS_URL=wss://stoat-dev.zasperhub.com/ws' >> packages/client/.env.production && \
-    echo 'VITE_MEDIA_URL=https://stoat-dev.zasperhub.com/autumn' >> packages/client/.env.production && \
+    echo 'VITE_MEDIA_URL=https://stoat-dev.zasperhub.com/api/files' >> packages/client/.env.production && \
     echo 'VITE_PROXY_URL=https://stoat-dev.zasperhub.com/january' >> packages/client/.env.production
 
 # Set environment for production build
@@ -26,6 +26,7 @@ ENV NODE_ENV=production
 
 # Build dependencies and application
 RUN pnpm run build:deps && cd packages/client && rm -rf components/i18n/catalogs/**/messages.js && pnpm run lingui:extract && pnpm run lingui:compile && find . -name "*messages*" -o -name "*locales*" | head -10 && pnpm run build
+
 # Production stage
 FROM nginx:alpine AS production
 
@@ -129,4 +130,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
- 
+

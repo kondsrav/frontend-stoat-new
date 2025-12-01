@@ -33,6 +33,7 @@ import { createDragHandle } from "@revolt/ui/components/utils/Draggable";
 
 import MdChevronRight from "@material-design-icons/svg/filled/chevron_right.svg?component-solid";
 import MdPersonAdd from "@material-design-icons/svg/filled/person_add.svg?component-solid";
+import MdAdd from "@material-design-icons/svg/filled/add.svg?component-solid";
 
 import MdSettings from "@material-symbols/svg-400/outlined/settings-fill.svg?component-solid";
 
@@ -88,6 +89,7 @@ type OrderingEvent =
  */
 export const ServerSidebar = (props: Props) => {
   const navigate = useNavigate();
+  const { openModal } = useModals();
 
   // TODO: this does not filter visible channels at the moment because the state for categories is not stored anywhere
   /** Gets a list of channels that are currently not hidden inside a closed category */
@@ -179,6 +181,16 @@ export const ServerSidebar = (props: Props) => {
     }
   }
 
+  /**
+   * Open create channel modal
+   */
+  const handleCreateChannel = () => {
+    openModal({ 
+      type: "create_channel", 
+      server: props.server 
+    });
+  };
+
   return (
     <SidebarBase>
       <Switch
@@ -188,6 +200,7 @@ export const ServerSidebar = (props: Props) => {
               server={props.server}
               openServerInfo={props.openServerInfo}
               openServerSettings={props.openServerSettings}
+              onCreateChannel={handleCreateChannel}
             />
           </Header>
         }
@@ -204,6 +217,7 @@ export const ServerSidebar = (props: Props) => {
               server={props.server}
               openServerInfo={props.openServerInfo}
               openServerSettings={props.openServerSettings}
+              onCreateChannel={handleCreateChannel}
             />
           </Header>
         </Match>
@@ -241,7 +255,9 @@ export const ServerSidebar = (props: Props) => {
  * Server Information
  */
 function ServerInfo(
-  props: Pick<Props, "server" | "openServerInfo" | "openServerSettings">,
+  props: Pick<Props, "server" | "openServerInfo" | "openServerSettings"> & {
+    onCreateChannel: () => void;
+  },
 ) {
   return (
     <Row align grow minWidth={0}>
@@ -249,6 +265,16 @@ function ServerInfo(
       <ServerName onClick={props.openServerInfo}>
         <TextWithEmoji content={props.server.name} />
       </ServerName>
+      <Tooltip content="Create Channel" placement="bottom">
+        <IconButton
+          size="xs"
+          width="narrow"
+          variant={props.server.banner ? "_header" : "standard"}
+          onPress={props.onCreateChannel}
+        >
+          <MdAdd {...symbolSize(24)} />
+        </IconButton>
+      </Tooltip>
       <IconButton
         size="xs"
         width="narrow"

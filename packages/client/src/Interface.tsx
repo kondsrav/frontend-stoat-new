@@ -4,6 +4,7 @@ import { Server } from "revolt.js";
 import { styled } from "styled-system/jsx";
 
 import { ChannelContextMenu, ServerContextMenu } from "@revolt/app";
+import { AppHeader } from "@revolt/app/interface/AppHeader";
 import { MessageCache } from "@revolt/app/interface/channels/text/MessageCache";
 import { Titlebar } from "@revolt/app/interface/desktop/Titlebar";
 import { useClient, useClientLifecycle } from "@revolt/client";
@@ -66,6 +67,7 @@ const Interface = (props: { children: JSX.Element }) => {
         }}
       >
         <Titlebar />
+        <AppHeader />
         <Switch fallback={<CircularProgress />}>
           <Match when={!isLoggedIn()}>
             <Navigate href="/login" />
@@ -179,3 +181,4 @@ const Content = styled("div", {
 });
 
 export default Interface;
+

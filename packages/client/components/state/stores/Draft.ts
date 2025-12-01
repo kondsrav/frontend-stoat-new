@@ -376,17 +376,20 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
             
             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
             if (response.status === 500) {
-              errorMessage = "Server error - please try again";
+              errorMessage = "Server error during file upload. Please check if the Autumn service is running and configured correctly.";
             } else if (response.status === 401) {
-              errorMessage = "Authentication failed";
+              errorMessage = "Authentication failed. Please try logging out and back in.";
             } else if (response.status === 403) {
-              errorMessage = "Permission denied";
+              errorMessage = "Permission denied. You may not have permission to upload files to this channel.";
             } else if (response.status === 413) {
-              errorMessage = "File too large";
+              errorMessage = "File too large. Maximum file size is 20MB.";
             } else if (response.status === 415) {
-              errorMessage = "File type not supported";
+              errorMessage = "File type not supported. Please try a different file format.";
+            } else if (response.status === 0) {
+              errorMessage = "Network error. Please check your connection to the file server.";
             }
             
+            // Show user-friendly error modal
             throw new Error(errorMessage);
           }
 
@@ -394,7 +397,7 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
           console.log('Upload successful:', uploadResult);
 
           if (!uploadResult || !uploadResult.id) {
-            throw new Error('Server response missing file ID');
+            throw new Error('Server response missing file ID - the upload may have failed on the server side');
           }
 
           console.log(`Upload successful for file ${file.name}, ID:`, uploadResult.id);
@@ -443,7 +446,7 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
       console.log('🚀 SENDING MESSAGE - Complete Debug Info:', {
         channelId: channel.id,
         channelType: channel.type,
-        serverId: channel.server_id || 'DM',
+        serverId: (channel as any).server?.id || 'DM',
         idempotencyKey: idempotencyKey,
         messageData: {
           content: data.content,
@@ -456,7 +459,7 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
         },
         attachmentInfo: attachments.map((id, index) => ({
           attachmentId: id,
-          originalFile: files ? files[index]?.file?.name : 'unknown'
+          originalFile: files ? this.getFile(files[index])?.file?.name || 'unknown' : 'unknown'
         }))
       });
 
@@ -498,36 +501,37 @@ export class Draft extends AbstractStore<"draft", TypeDraft> {
         ),
       );
     } catch (err) {
+      const error = err as any; // Cast to any to handle various error types
       console.error('❌ MESSAGE SENDING FAILED - Complete Error Info:', {
-        error: err,
-        errorMessage: err.message,
-        errorStack: err.stack,
-        errorType: err.constructor.name,
-        statusCode: err.status || err.statusCode || 'unknown',
-        responseText: err.responseText || 'no response text',
+        error: error,
+        errorMessage: error.message || 'Unknown error',
+        errorStack: error.stack || 'No stack trace',
+        errorType: error.constructor?.name || 'Unknown',
+        statusCode: error.status || error.statusCode || 'unknown',
+        responseText: error.responseText || 'no response text',
         channelId: channel.id,
         messageData: data,
         idempotencyKey: idempotencyKey
       });
 
       // Try to get more details from the error
-      if (err.response) {
+      if (error.response) {
         console.error('❌ HTTP Response Error:', {
-          status: err.response.status,
-          statusText: err.response.statusText,
-          headers: err.response.headers,
-          data: err.response.data
+          status: error.response.status,
+          statusText: error.response.statusText,
+          headers: error.response.headers,
+          data: error.response.data
         });
       }
 
       // Check for specific error types
-      if (err.message && err.message.includes('401')) {
+      if (error.message && error.message.includes('401')) {
         console.error('❌ AUTHENTICATION ERROR: User not properly authenticated');
-      } else if (err.message && err.message.includes('403')) {
+      } else if (error.message && error.message.includes('403')) {
         console.error('❌ PERMISSION ERROR: User lacks permission to send messages or attachments');
-      } else if (err.message && err.message.includes('400')) {
+      } else if (error.message && error.message.includes('400')) {
         console.error('❌ VALIDATION ERROR: Message data is invalid');
-      } else if (err.message && err.message.includes('500')) {
+      } else if (error.message && error.message.includes('500')) {
         console.error('❌ SERVER ERROR: Backend API error');
       }
       

@@ -20,6 +20,11 @@ interface Props {
   lastId: Accessor<string | undefined>;
 
   /**
+   * Whether the user is at the end of the conversation
+   */
+  atEnd: Accessor<boolean>;
+
+  /**
    * Jump back to the last message
    */
   jumpBack: () => void;
@@ -47,7 +52,7 @@ export function NewMessages(props: Props) {
   }
 
   return (
-    <Show when={props.lastId()}>
+    <Show when={props.lastId() && !props.atEnd()}>
       <FloatingIndicator position="top" onClick={props.jumpBack}>
         <Ripple />
         <span class={css({ flexGrow: 1 })}>
@@ -71,3 +76,4 @@ const CancelIcon = styled("div", {
     height: "16px",
   },
 });
+

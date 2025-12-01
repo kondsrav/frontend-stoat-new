@@ -173,6 +173,7 @@ export function TextChannel(props: ChannelPageProps) {
             <div>
               <NewMessages
                 lastId={lastId}
+                atEnd={() => (atEndRef ? atEndRef() : true)}
                 jumpBack={() => navigate(lastId()!)}
                 dismiss={() => setLastId()}
               />
@@ -323,3 +324,4 @@ const SidebarTitle = styled("div", {
     color: "var(--md-sys-color-on-surface)",
   },
 });
+

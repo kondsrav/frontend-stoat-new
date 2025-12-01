@@ -142,6 +142,10 @@ export type Modals =
       emoji: Emoji;
     }
   | {
+      type: "forward_message";
+      message: Message;
+    }
+  | {
       /**
        * @deprecated build proper error handling!
        */
@@ -304,3 +308,4 @@ export type Modals =
   | {
       type: "import_theme";
     };
+
